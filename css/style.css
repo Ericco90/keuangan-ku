@@ -22,6 +22,10 @@
     --border-color: #333333;
 }
 
+html, body {
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--background) !important;

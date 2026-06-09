@@ -15,6 +15,13 @@ let globalBudgets = [];
 let globalGoals = [];
 let globalDebts = [];
 
+// PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW reg failed:', err));
+  });
+}
+
 function switchView(view) {
     const dashboardView = document.getElementById('view-dashboard');
     const analyticsView = document.getElementById('view-analytics');
