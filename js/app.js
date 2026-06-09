@@ -11,16 +11,25 @@ const categories = {
 let categoryChartInstance = null;
 let trendChartInstance = null;
 let globalTransactions = [];
+let globalBudgets = [];
+let globalGoals = [];
 
 function switchView(view) {
     const dashboardView = document.getElementById('view-dashboard');
     const analyticsView = document.getElementById('view-analytics');
+    const budgetsView = document.getElementById('view-budgets');
+    const goalsView = document.getElementById('view-goals');
+    
     const navDashboard = document.getElementById('nav-dashboard');
     const navAnalytics = document.getElementById('nav-analytics');
+    const navBudgets = document.getElementById('nav-budgets');
+    const navGoals = document.getElementById('nav-goals');
     
     // Mobile Nav
     const mobNavDashboard = document.getElementById('mob-nav-dashboard');
     const mobNavAnalytics = document.getElementById('mob-nav-analytics');
+    const mobNavBudgets = document.getElementById('mob-nav-budgets');
+    const mobNavGoals = document.getElementById('mob-nav-goals');
     
     // Update Title
     const title = document.getElementById('page-title');
@@ -29,23 +38,65 @@ function switchView(view) {
     if (view === 'dashboard') {
         dashboardView.classList.remove('d-none');
         analyticsView.classList.add('d-none');
+        budgetsView.classList.add('d-none');
+        
         if(navDashboard) navDashboard.classList.add('active');
         if(navAnalytics) navAnalytics.classList.remove('active');
+        if(navBudgets) navBudgets.classList.remove('active');
         if(mobNavDashboard) mobNavDashboard.classList.add('active');
         if(mobNavAnalytics) mobNavAnalytics.classList.remove('active');
+        if(mobNavBudgets) mobNavBudgets.classList.remove('active');
         
         title.innerText = 'Dashboard Keuangan';
         subtitle.innerText = 'Ringkasan kondisi finansial Anda.';
-    } else {
+    } else if (view === 'analytics') {
         dashboardView.classList.add('d-none');
         analyticsView.classList.remove('d-none');
+        budgetsView.classList.add('d-none');
+        
         if(navDashboard) navDashboard.classList.remove('active');
         if(navAnalytics) navAnalytics.classList.add('active');
+        if(navBudgets) navBudgets.classList.remove('active');
         if(mobNavDashboard) mobNavDashboard.classList.remove('active');
         if(mobNavAnalytics) mobNavAnalytics.classList.add('active');
+        if(mobNavBudgets) mobNavBudgets.classList.remove('active');
         
         title.innerText = 'Analitik & Grafik';
         subtitle.innerText = 'Wawasan detail mengenai arus kas Anda.';
+    } else if (view === 'budgets') {
+        dashboardView.classList.add('d-none');
+        analyticsView.classList.add('d-none');
+        budgetsView.classList.remove('d-none');
+        if(goalsView) goalsView.classList.add('d-none');
+        
+        if(navDashboard) navDashboard.classList.remove('active');
+        if(navAnalytics) navAnalytics.classList.remove('active');
+        if(navBudgets) navBudgets.classList.add('active');
+        if(navGoals) navGoals.classList.remove('active');
+        if(mobNavDashboard) mobNavDashboard.classList.remove('active');
+        if(mobNavAnalytics) mobNavAnalytics.classList.remove('active');
+        if(mobNavBudgets) mobNavBudgets.classList.add('active');
+        if(mobNavGoals) mobNavGoals.classList.remove('active');
+        
+        title.innerText = 'Anggaran Bulanan';
+        subtitle.innerText = 'Kontrol pengeluaran Anda agar tetap hemat.';
+    } else if (view === 'goals') {
+        dashboardView.classList.add('d-none');
+        analyticsView.classList.add('d-none');
+        budgetsView.classList.add('d-none');
+        if(goalsView) goalsView.classList.remove('d-none');
+        
+        if(navDashboard) navDashboard.classList.remove('active');
+        if(navAnalytics) navAnalytics.classList.remove('active');
+        if(navBudgets) navBudgets.classList.remove('active');
+        if(navGoals) navGoals.classList.add('active');
+        if(mobNavDashboard) mobNavDashboard.classList.remove('active');
+        if(mobNavAnalytics) mobNavAnalytics.classList.remove('active');
+        if(mobNavBudgets) mobNavBudgets.classList.remove('active');
+        if(mobNavGoals) mobNavGoals.classList.add('active');
+        
+        title.innerText = 'Tujuan & Tabungan';
+        subtitle.innerText = 'Pantau progres finansial dan impian Anda.';
     }
 }
 
@@ -54,6 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
         document.getElementById('api-alert').style.display = 'none';
         loadTransactions();
+        loadBudgets();
+        loadGoals();
     }
 
     // Set tanggal hari ini di input tanggal
@@ -81,7 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup Submit Form
     const form = document.getElementById('transaction-form');
-    form.addEventListener('submit', handleAddTransaction);
+    if(form) form.addEventListener('submit', handleAddTransaction);
+
+    const budgetForm = document.getElementById('budget-form');
+    if(budgetForm) budgetForm.addEventListener('submit', handleSaveBudget);
+
+    const goalForm = document.getElementById('goal-form');
+    if(goalForm) goalForm.addEventListener('submit', handleSaveGoal);
 });
 
 function formatRupiah(number) {
@@ -102,7 +161,8 @@ function loadTransactions() {
         .then(data => {
             if (data.result === 'success') {
                 globalTransactions = data.data;
-                renderDashboard(data.data);
+                populateMonthFilter();
+                applyMonthFilter();
             } else {
                 tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${data.message}</td></tr>`;
             }
@@ -111,6 +171,78 @@ function loadTransactions() {
             console.error(err);
             tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Terjadi kesalahan saat memuat data.</td></tr>';
         });
+}
+
+function loadBudgets() {
+    fetch(SCRIPT_URL + '?action=getBudgets')
+        .then(res => res.json())
+        .then(data => {
+            if (data.result === 'success') {
+                globalBudgets = data.data;
+                renderBudgets();
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+function loadGoals() {
+    fetch(SCRIPT_URL + '?action=getGoals')
+        .then(res => res.json())
+        .then(data => {
+            if (data.result === 'success') {
+                globalGoals = data.data;
+                renderGoals();
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+function populateMonthFilter() {
+    const filter = document.getElementById('month-filter');
+    const currentValue = filter.value;
+    
+    // Simpan option 'Semua Waktu'
+    filter.innerHTML = '<option value="all">Semua Waktu</option>';
+    
+    const months = new Set();
+    globalTransactions.forEach(trx => {
+        const d = new Date(trx.date);
+        const monthStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        months.add(monthStr);
+    });
+    
+    const sortedMonths = Array.from(months).sort((a, b) => b.localeCompare(a));
+    
+    sortedMonths.forEach(m => {
+        const [year, month] = m.split('-');
+        const dateObj = new Date(year, parseInt(month) - 1, 1);
+        const label = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+        
+        const option = document.createElement('option');
+        option.value = m;
+        option.textContent = label;
+        filter.appendChild(option);
+    });
+    
+    // Kembalikan ke nilai sebelumnya jika masih ada
+    if (Array.from(filter.options).some(opt => opt.value === currentValue)) {
+        filter.value = currentValue;
+    }
+}
+
+function applyMonthFilter() {
+    const selected = document.getElementById('month-filter').value;
+    let filtered = globalTransactions;
+    
+    if (selected !== 'all') {
+        filtered = globalTransactions.filter(trx => {
+            const d = new Date(trx.date);
+            const monthStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            return monthStr === selected;
+        });
+    }
+    
+    renderDashboard(filtered);
 }
 
 function renderDashboard(transactions) {
@@ -185,15 +317,21 @@ function renderDashboard(transactions) {
     document.getElementById('total-income').innerText = formatRupiah(totalIncome);
     document.getElementById('total-expense').innerText = formatRupiah(totalExpense);
 
+    // Save currently filtered transactions for chart toggling
+    window.currentFilteredTransactions = transactions;
+
     updateCategoryChart();
     renderTrendChart(trendData);
+    if (typeof renderBudgets === 'function') renderBudgets();
 }
 
 function updateCategoryChart() {
     const type = document.getElementById('chart-type-select').value;
     let dataObj = {};
     
-    globalTransactions.forEach(trx => {
+    const txList = window.currentFilteredTransactions || globalTransactions;
+    
+    txList.forEach(trx => {
         if (trx.type === type) {
             const amount = parseFloat(trx.amount);
             if (dataObj[trx.category]) {
@@ -442,4 +580,204 @@ function deleteTransaction(id) {
         }
     })
     .catch(err => console.error(err));
+}
+
+function renderBudgets() {
+    const budgetList = document.getElementById('budget-list');
+    if(!budgetList) return;
+    budgetList.innerHTML = '';
+    
+    if (globalBudgets.length === 0) {
+        budgetList.innerHTML = '<div class="col-12 text-center py-4 text-muted">Belum ada anggaran yang diatur.</div>';
+        return;
+    }
+    
+    const txList = window.currentFilteredTransactions || globalTransactions;
+    let expenseByCategory = {};
+    txList.forEach(trx => {
+        if (trx.type === 'Pengeluaran') {
+            const amount = parseFloat(trx.amount);
+            if(expenseByCategory[trx.category]) expenseByCategory[trx.category] += amount;
+            else expenseByCategory[trx.category] = amount;
+        }
+    });
+
+    globalBudgets.forEach(b => {
+        const limit = parseFloat(b.amount);
+        const spent = expenseByCategory[b.category] || 0;
+        const percentage = Math.min((spent / limit) * 100, 100).toFixed(1);
+        
+        let colorClass = 'bg-success';
+        if (percentage >= 100) colorClass = 'bg-danger';
+        else if (percentage >= 80) colorClass = 'bg-warning';
+
+        const col = document.createElement('div');
+        col.className = 'col-md-6';
+        col.innerHTML = `
+            <div class="border rounded-3 p-3 shadow-sm bg-white">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-semibold text-dark">${b.category}</span>
+                    <span class="small ${percentage >= 100 ? 'text-danger fw-bold' : 'text-muted'}">${percentage}%</span>
+                </div>
+                <div class="progress mb-2" style="height: 10px; border-radius: 10px;">
+                    <div class="progress-bar ${colorClass}" role="progressbar" style="width: ${percentage}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted">
+                    <span>Terpakai: <strong class="text-dark">${formatRupiah(spent)}</strong></span>
+                    <span>Batas: <strong class="text-dark">${formatRupiah(limit)}</strong></span>
+                </div>
+            </div>
+        `;
+        budgetList.appendChild(col);
+    });
+}
+
+function handleSaveBudget(e) {
+    e.preventDefault();
+
+    if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+        alert("Ganti SCRIPT_URL dengan URL Web App Anda untuk menyimpan data.");
+        return;
+    }
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = new URLSearchParams();
+    
+    for (const pair of formData) {
+        data.append(pair[0], pair[1]);
+    }
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnHTML = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+
+    fetch(SCRIPT_URL + '?action=saveBudget', {
+        method: 'POST',
+        body: data
+    })
+    .then(res => res.json())
+    .then(resData => {
+        if(resData.result === 'success') {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('setBudgetModal'));
+            modal.hide();
+            form.reset();
+            loadBudgets(); // Refresh data
+        } else {
+            alert("Error: " + resData.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Terjadi kesalahan saat menyimpan data.");
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+    });
+}
+
+function renderGoals() {
+    const goalList = document.getElementById('goal-list');
+    if(!goalList) return;
+    goalList.innerHTML = '';
+    
+    if (globalGoals.length === 0) {
+        goalList.innerHTML = '<div class="col-12 text-center py-4 text-muted">Belum ada tujuan yang diatur.</div>';
+        return;
+    }
+    
+    globalGoals.forEach(g => {
+        const target = parseFloat(g.target);
+        const current = parseFloat(g.current);
+        const percentage = Math.min((current / target) * 100, 100).toFixed(1);
+        
+        const col = document.createElement('div');
+        col.className = 'col-md-6';
+        col.innerHTML = `
+            <div class="border rounded-3 p-3 shadow-sm bg-white" style="cursor: pointer;" onclick="editGoal('${g.id}')">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-semibold text-dark">${g.name}</span>
+                    <span class="small text-success fw-bold">${percentage}%</span>
+                </div>
+                <div class="progress mb-2" style="height: 10px; border-radius: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: ${percentage}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted">
+                    <span>Terkumpul: <strong class="text-dark">${formatRupiah(current)}</strong></span>
+                    <span>Target: <strong class="text-dark">${formatRupiah(target)}</strong></span>
+                </div>
+                <div class="text-end mt-2">
+                    <small class="text-primary"><i class="fas fa-edit me-1"></i>Edit</small>
+                </div>
+            </div>
+        `;
+        goalList.appendChild(col);
+    });
+}
+
+function openGoalModal() {
+    document.getElementById('goal-form').reset();
+    document.getElementById('goal-id').value = '';
+    document.getElementById('goalModalTitle').innerText = 'Tambah Tujuan Baru';
+    new bootstrap.Modal(document.getElementById('setGoalModal')).show();
+}
+
+function editGoal(id) {
+    const goal = globalGoals.find(g => g.id.toString() === id.toString());
+    if (goal) {
+        document.getElementById('goal-id').value = goal.id;
+        document.getElementById('goal-name').value = goal.name;
+        document.getElementById('goal-target').value = goal.target;
+        document.getElementById('goal-current').value = goal.current;
+        document.getElementById('goalModalTitle').innerText = 'Edit Tujuan Tabungan';
+        new bootstrap.Modal(document.getElementById('setGoalModal')).show();
+    }
+}
+
+function handleSaveGoal(e) {
+    e.preventDefault();
+
+    if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+        alert("Ganti SCRIPT_URL dengan URL Web App Anda untuk menyimpan data.");
+        return;
+    }
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = new URLSearchParams();
+    
+    for (const pair of formData) {
+        data.append(pair[0], pair[1]);
+    }
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnHTML = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+
+    fetch(SCRIPT_URL + '?action=saveGoal', {
+        method: 'POST',
+        body: data
+    })
+    .then(res => res.json())
+    .then(resData => {
+        if(resData.result === 'success') {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('setGoalModal'));
+            modal.hide();
+            form.reset();
+            loadGoals(); // Refresh data
+        } else {
+            alert("Error: " + resData.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Terjadi kesalahan saat menyimpan data.");
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+    });
 }
