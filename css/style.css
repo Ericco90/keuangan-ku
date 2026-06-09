@@ -79,6 +79,8 @@ body {
 .main-content {
     margin-left: 250px;
     min-height: 100vh;
+    max-width: 100vw;
+    overflow-x: hidden;
 }
 
 .sidebar-link {
@@ -195,6 +197,9 @@ body {
 @media (max-width: 768px) {
     .main-content {
         margin-left: 0;
+        width: 100vw;
+        max-width: 100vw;
+        overflow-x: hidden;
     }
     
     .stat-card {
