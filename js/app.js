@@ -166,9 +166,10 @@ function renderDashboard(transactions) {
                 <div class="fw-semibold text-dark">${formatDate(trx.date)}</div>
             </td>
             <td>
-                <span class="badge ${isIncome ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} rounded-pill">
+                <span class="badge ${isIncome ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} rounded-pill mb-1 d-inline-block">
                     ${trx.category}
                 </span>
+                <div class="small text-muted"><i class="fas fa-wallet me-1"></i> ${trx.source || '-'}</div>
             </td>
             <td>${trx.notes}</td>
             <td class="text-end fw-bold ${isIncome ? 'text-success' : 'text-danger'}">

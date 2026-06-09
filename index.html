@@ -114,7 +114,7 @@
                                         <thead class="table-light">
                                             <tr>
                                                 <th>Tanggal</th>
-                                                <th>Kategori</th>
+                                                <th>Kategori & Sumber</th>
                                                 <th>Catatan</th>
                                                 <th class="text-end">Jumlah</th>
                                                 <th class="text-center">Aksi</th>
@@ -213,6 +213,22 @@
                             <label class="form-label fw-semibold">Kategori</label>
                             <select class="form-select" name="category" id="category-select" required>
                                 <!-- Categories populated by JS -->
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="source-container">
+                            <label class="form-label fw-semibold">Sumber Dana / Akun</label>
+                            <select class="form-select" name="source" id="source-select" required>
+                                <option value="Tunai / Cash">Tunai / Cash</option>
+                                <option value="Bank BCA">Bank BCA</option>
+                                <option value="Bank Mandiri">Bank Mandiri</option>
+                                <option value="Bank BRI">Bank BRI</option>
+                                <option value="Bank BNI">Bank BNI</option>
+                                <option value="Gopay">Gopay</option>
+                                <option value="OVO">OVO</option>
+                                <option value="Dana">Dana</option>
+                                <option value="ShopeePay">ShopeePay</option>
+                                <option value="Lainnya">Lainnya</option>
                             </select>
                         </div>
 
