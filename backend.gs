@@ -28,6 +28,29 @@ function setup() {
     sheet.getRange("A1:D1").setFontWeight("bold");
     sheet.setFrozenRows(1);
   }
+  
+  if (!doc.getSheetByName('categories')) {
+    const sheet = doc.insertSheet('categories');
+    sheet.appendRow(['type', 'name']);
+    sheet.getRange("A1:B1").setFontWeight("bold");
+    sheet.setFrozenRows(1);
+    // Insert defaults
+    sheet.appendRow(['Pemasukan', 'Gaji']);
+    sheet.appendRow(['Pemasukan', 'Bonus']);
+    sheet.appendRow(['Pemasukan', 'Investasi']);
+    sheet.appendRow(['Pemasukan', 'Lainnya']);
+    sheet.appendRow(['Pengeluaran', 'Makanan & Minuman']);
+    sheet.appendRow(['Pengeluaran', 'Transportasi']);
+    sheet.appendRow(['Pengeluaran', 'Tagihan & Utilitas']);
+    sheet.appendRow(['Pengeluaran', 'Lainnya']);
+  }
+  
+  if (!doc.getSheetByName('debts')) {
+    const sheet = doc.insertSheet('debts');
+    sheet.appendRow(['id', 'name', 'type', 'total', 'paid', 'dueDate', 'status']);
+    sheet.getRange("A1:G1").setFontWeight("bold");
+    sheet.setFrozenRows(1);
+  }
 }
 
 function doGet(e) {
@@ -40,6 +63,10 @@ function doGet(e) {
       return getBudgets();
     } else if (action === 'getGoals') {
       return getGoals();
+    } else if (action === 'getCategories') {
+      return getCategories();
+    } else if (action === 'getDebts') {
+      return getDebts();
     } else {
       return ContentService.createTextOutput(JSON.stringify({result: "error", message: "Invalid action"})).setMimeType(ContentService.MimeType.JSON);
     }
@@ -60,6 +87,12 @@ function doPost(e) {
       return saveBudget(e.parameter);
     } else if (action === 'saveGoal') {
       return saveGoal(e.parameter);
+    } else if (action === 'saveCategory') {
+      return saveCategory(e.parameter);
+    } else if (action === 'deleteCategory') {
+      return deleteCategory(e.parameter.name);
+    } else if (action === 'saveDebt') {
+      return saveDebt(e.parameter);
     } else {
       return ContentService.createTextOutput(JSON.stringify({result: "error", message: "Invalid action"})).setMimeType(ContentService.MimeType.JSON);
     }
@@ -227,4 +260,83 @@ function saveGoal(param) {
   }
   
   return ContentService.createTextOutput(JSON.stringify({result: "success", message: "Tujuan Berhasil Disimpan"})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getCategories() {
+  const doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+  const sheet = doc.getSheetByName('categories');
+  if (!sheet) return ContentService.createTextOutput(JSON.stringify({result: "success", data: []})).setMimeType(ContentService.MimeType.JSON);
+  
+  const data = sheet.getDataRange().getValues();
+  const result = [];
+  for (let i = 1; i < data.length; i++) {
+    result.push({ type: data[i][0], name: data[i][1] });
+  }
+  return ContentService.createTextOutput(JSON.stringify({result: "success", data: result})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function saveCategory(param) {
+  const doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+  let sheet = doc.getSheetByName('categories');
+  const data = sheet.getDataRange().getValues();
+  
+  let exists = false;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1].toString().toLowerCase() === param.name.toString().toLowerCase() && data[i][0] === param.type) {
+      exists = true; break;
+    }
+  }
+  if (!exists) sheet.appendRow([param.type, param.name]);
+  return ContentService.createTextOutput(JSON.stringify({result: "success"})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function deleteCategory(name) {
+  const doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+  const sheet = doc.getSheetByName('categories');
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1].toString() === name.toString()) {
+      sheet.deleteRow(i + 1);
+      break;
+    }
+  }
+  return ContentService.createTextOutput(JSON.stringify({result: "success"})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getDebts() {
+  const doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+  const sheet = doc.getSheetByName('debts');
+  if (!sheet) return ContentService.createTextOutput(JSON.stringify({result: "success", data: []})).setMimeType(ContentService.MimeType.JSON);
+  
+  const data = sheet.getDataRange().getValues();
+  const result = [];
+  for (let i = 1; i < data.length; i++) {
+    result.push({
+      id: data[i][0], name: data[i][1], type: data[i][2],
+      total: data[i][3], paid: data[i][4], dueDate: data[i][5], status: data[i][6]
+    });
+  }
+  return ContentService.createTextOutput(JSON.stringify({result: "success", data: result})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function saveDebt(param) {
+  const doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+  let sheet = doc.getSheetByName('debts');
+  const data = sheet.getDataRange().getValues();
+  let found = false;
+  
+  if (param.id) {
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0].toString() === param.id.toString()) {
+        sheet.getRange(i + 1, 2, 1, 6).setValues([[param.name, param.type, param.total, param.paid, param.dueDate, param.status]]);
+        found = true; break;
+      }
+    }
+  }
+  
+  if (!found) {
+    const newId = new Date().getTime().toString() + Math.floor(Math.random() * 1000);
+    sheet.appendRow([newId, param.name, param.type, param.total, param.paid || 0, param.dueDate || "", param.status || "Belum Lunas"]);
+  }
+  return ContentService.createTextOutput(JSON.stringify({result: "success"})).setMimeType(ContentService.MimeType.JSON);
 }

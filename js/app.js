@@ -13,17 +13,20 @@ let trendChartInstance = null;
 let globalTransactions = [];
 let globalBudgets = [];
 let globalGoals = [];
+let globalDebts = [];
 
 function switchView(view) {
     const dashboardView = document.getElementById('view-dashboard');
     const analyticsView = document.getElementById('view-analytics');
     const budgetsView = document.getElementById('view-budgets');
     const goalsView = document.getElementById('view-goals');
+    const debtsView = document.getElementById('view-debts');
     
     const navDashboard = document.getElementById('nav-dashboard');
     const navAnalytics = document.getElementById('nav-analytics');
     const navBudgets = document.getElementById('nav-budgets');
     const navGoals = document.getElementById('nav-goals');
+    const navDebts = document.getElementById('nav-debts');
     
     // Mobile Nav
     const mobNavDashboard = document.getElementById('mob-nav-dashboard');
@@ -39,10 +42,15 @@ function switchView(view) {
         dashboardView.classList.remove('d-none');
         analyticsView.classList.add('d-none');
         budgetsView.classList.add('d-none');
+        if(goalsView) goalsView.classList.add('d-none');
+        if(debtsView) debtsView.classList.add('d-none');
         
         if(navDashboard) navDashboard.classList.add('active');
         if(navAnalytics) navAnalytics.classList.remove('active');
         if(navBudgets) navBudgets.classList.remove('active');
+        if(navGoals) navGoals.classList.remove('active');
+        if(navDebts) navDebts.classList.remove('active');
+        
         if(mobNavDashboard) mobNavDashboard.classList.add('active');
         if(mobNavAnalytics) mobNavAnalytics.classList.remove('active');
         if(mobNavBudgets) mobNavBudgets.classList.remove('active');
@@ -53,10 +61,15 @@ function switchView(view) {
         dashboardView.classList.add('d-none');
         analyticsView.classList.remove('d-none');
         budgetsView.classList.add('d-none');
+        if(goalsView) goalsView.classList.add('d-none');
+        if(debtsView) debtsView.classList.add('d-none');
         
         if(navDashboard) navDashboard.classList.remove('active');
         if(navAnalytics) navAnalytics.classList.add('active');
         if(navBudgets) navBudgets.classList.remove('active');
+        if(navGoals) navGoals.classList.remove('active');
+        if(navDebts) navDebts.classList.remove('active');
+        
         if(mobNavDashboard) mobNavDashboard.classList.remove('active');
         if(mobNavAnalytics) mobNavAnalytics.classList.add('active');
         if(mobNavBudgets) mobNavBudgets.classList.remove('active');
@@ -68,15 +81,17 @@ function switchView(view) {
         analyticsView.classList.add('d-none');
         budgetsView.classList.remove('d-none');
         if(goalsView) goalsView.classList.add('d-none');
+        if(debtsView) debtsView.classList.add('d-none');
         
         if(navDashboard) navDashboard.classList.remove('active');
         if(navAnalytics) navAnalytics.classList.remove('active');
         if(navBudgets) navBudgets.classList.add('active');
         if(navGoals) navGoals.classList.remove('active');
+        if(navDebts) navDebts.classList.remove('active');
+        
         if(mobNavDashboard) mobNavDashboard.classList.remove('active');
         if(mobNavAnalytics) mobNavAnalytics.classList.remove('active');
         if(mobNavBudgets) mobNavBudgets.classList.add('active');
-        if(mobNavGoals) mobNavGoals.classList.remove('active');
         
         title.innerText = 'Anggaran Bulanan';
         subtitle.innerText = 'Kontrol pengeluaran Anda agar tetap hemat.';
@@ -85,11 +100,14 @@ function switchView(view) {
         analyticsView.classList.add('d-none');
         budgetsView.classList.add('d-none');
         if(goalsView) goalsView.classList.remove('d-none');
+        if(debtsView) debtsView.classList.add('d-none');
         
         if(navDashboard) navDashboard.classList.remove('active');
         if(navAnalytics) navAnalytics.classList.remove('active');
         if(navBudgets) navBudgets.classList.remove('active');
         if(navGoals) navGoals.classList.add('active');
+        if(navDebts) navDebts.classList.remove('active');
+        
         if(mobNavDashboard) mobNavDashboard.classList.remove('active');
         if(mobNavAnalytics) mobNavAnalytics.classList.remove('active');
         if(mobNavBudgets) mobNavBudgets.classList.remove('active');
@@ -97,16 +115,33 @@ function switchView(view) {
         
         title.innerText = 'Tujuan & Tabungan';
         subtitle.innerText = 'Pantau progres finansial dan impian Anda.';
+    } else if (view === 'debts') {
+        dashboardView.classList.add('d-none');
+        analyticsView.classList.add('d-none');
+        budgetsView.classList.add('d-none');
+        if(goalsView) goalsView.classList.add('d-none');
+        if(debtsView) debtsView.classList.remove('d-none');
+        
+        if(navDashboard) navDashboard.classList.remove('active');
+        if(navAnalytics) navAnalytics.classList.remove('active');
+        if(navBudgets) navBudgets.classList.remove('active');
+        if(navGoals) navGoals.classList.remove('active');
+        if(navDebts) navDebts.classList.add('active');
+        
+        title.innerText = 'Hutang & Piutang';
+        subtitle.innerText = 'Kelola catatan pinjam meminjam Anda.';
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    initDarkMode();
     // Cek konfigurasi API
     if (SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
         document.getElementById('api-alert').style.display = 'none';
         loadTransactions();
         loadBudgets();
         loadGoals();
+        loadDebts();
     }
 
     // Set tanggal hari ini di input tanggal
@@ -141,6 +176,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const goalForm = document.getElementById('goal-form');
     if(goalForm) goalForm.addEventListener('submit', handleSaveGoal);
+
+    const debtForm = document.getElementById('debt-form');
+    if(debtForm) debtForm.addEventListener('submit', handleSaveDebt);
 });
 
 function formatRupiah(number) {
@@ -192,6 +230,18 @@ function loadGoals() {
             if (data.result === 'success') {
                 globalGoals = data.data;
                 renderGoals();
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+function loadDebts() {
+    fetch(SCRIPT_URL + '?action=getDebts')
+        .then(res => res.json())
+        .then(data => {
+            if (data.result === 'success') {
+                globalDebts = data.data;
+                renderDebts();
             }
         })
         .catch(err => console.error(err));
@@ -768,6 +818,430 @@ function handleSaveGoal(e) {
             modal.hide();
             form.reset();
             loadGoals(); // Refresh data
+        } else {
+            alert("Error: " + resData.message);
+        }
+    })
+    .catch(err => {
+    })
+    .catch(err => console.error(err));
+}
+
+function renderBudgets() {
+    const budgetList = document.getElementById('budget-list');
+    if(!budgetList) return;
+    budgetList.innerHTML = '';
+    
+    if (globalBudgets.length === 0) {
+        budgetList.innerHTML = '<div class="col-12 text-center py-4 text-muted">Belum ada anggaran yang diatur.</div>';
+        return;
+    }
+    
+    const txList = window.currentFilteredTransactions || globalTransactions;
+    let expenseByCategory = {};
+    txList.forEach(trx => {
+        if (trx.type === 'Pengeluaran') {
+            const amount = parseFloat(trx.amount);
+            if(expenseByCategory[trx.category]) expenseByCategory[trx.category] += amount;
+            else expenseByCategory[trx.category] = amount;
+        }
+    });
+
+    globalBudgets.forEach(b => {
+        const limit = parseFloat(b.amount);
+        const spent = expenseByCategory[b.category] || 0;
+        const percentage = Math.min((spent / limit) * 100, 100).toFixed(1);
+        
+        let colorClass = 'bg-success';
+        if (percentage >= 100) colorClass = 'bg-danger';
+        else if (percentage >= 80) colorClass = 'bg-warning';
+
+        const col = document.createElement('div');
+        col.className = 'col-md-6';
+        col.innerHTML = `
+            <div class="border rounded-3 p-3 shadow-sm bg-white">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-semibold text-dark">${b.category}</span>
+                    <span class="small ${percentage >= 100 ? 'text-danger fw-bold' : 'text-muted'}">${percentage}%</span>
+                </div>
+                <div class="progress mb-2" style="height: 10px; border-radius: 10px;">
+                    <div class="progress-bar ${colorClass}" role="progressbar" style="width: ${percentage}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted">
+                    <span>Terpakai: <strong class="text-dark">${formatRupiah(spent)}</strong></span>
+                    <span>Batas: <strong class="text-dark">${formatRupiah(limit)}</strong></span>
+                </div>
+            </div>
+        `;
+        budgetList.appendChild(col);
+    });
+}
+
+function handleSaveBudget(e) {
+    e.preventDefault();
+
+    if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+        alert("Ganti SCRIPT_URL dengan URL Web App Anda untuk menyimpan data.");
+        return;
+    }
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = new URLSearchParams();
+    
+    for (const pair of formData) {
+        data.append(pair[0], pair[1]);
+    }
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnHTML = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+
+    fetch(SCRIPT_URL + '?action=saveBudget', {
+        method: 'POST',
+        body: data
+    })
+    .then(res => res.json())
+    .then(resData => {
+        if(resData.result === 'success') {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('setBudgetModal'));
+            modal.hide();
+            form.reset();
+            loadBudgets(); // Refresh data
+        } else {
+            alert("Error: " + resData.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Terjadi kesalahan saat menyimpan data.");
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+    });
+}
+
+function renderGoals() {
+    const goalList = document.getElementById('goal-list');
+    if(!goalList) return;
+    goalList.innerHTML = '';
+    
+    if (globalGoals.length === 0) {
+        goalList.innerHTML = '<div class="col-12 text-center py-4 text-muted">Belum ada tujuan yang diatur.</div>';
+        return;
+    }
+    
+    globalGoals.forEach(g => {
+        const target = parseFloat(g.target);
+        const current = parseFloat(g.current);
+        const percentage = Math.min((current / target) * 100, 100).toFixed(1);
+        
+        const col = document.createElement('div');
+        col.className = 'col-md-6';
+        col.innerHTML = `
+            <div class="border rounded-3 p-3 shadow-sm bg-white" style="cursor: pointer;" onclick="editGoal('${g.id}')">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-semibold text-dark">${g.name}</span>
+                    <span class="small text-success fw-bold">${percentage}%</span>
+                </div>
+                <div class="progress mb-2" style="height: 10px; border-radius: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: ${percentage}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted">
+                    <span>Terkumpul: <strong class="text-dark">${formatRupiah(current)}</strong></span>
+                    <span>Target: <strong class="text-dark">${formatRupiah(target)}</strong></span>
+                </div>
+                <div class="text-end mt-2">
+                    <small class="text-primary"><i class="fas fa-edit me-1"></i>Edit</small>
+                </div>
+            </div>
+        `;
+        goalList.appendChild(col);
+    });
+}
+
+function openGoalModal() {
+    document.getElementById('goal-form').reset();
+    document.getElementById('goal-id').value = '';
+    document.getElementById('goalModalTitle').innerText = 'Tambah Tujuan Baru';
+    new bootstrap.Modal(document.getElementById('setGoalModal')).show();
+}
+
+function editGoal(id) {
+    const goal = globalGoals.find(g => g.id.toString() === id.toString());
+    if (goal) {
+        document.getElementById('goal-id').value = goal.id;
+        document.getElementById('goal-name').value = goal.name;
+        document.getElementById('goal-target').value = goal.target;
+        document.getElementById('goal-current').value = goal.current;
+        document.getElementById('goalModalTitle').innerText = 'Edit Tujuan Tabungan';
+        new bootstrap.Modal(document.getElementById('setGoalModal')).show();
+    }
+}
+
+function handleSaveGoal(e) {
+    e.preventDefault();
+
+    if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+        alert("Ganti SCRIPT_URL dengan URL Web App Anda untuk menyimpan data.");
+        return;
+    }
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = new URLSearchParams();
+    
+    for (const pair of formData) {
+        data.append(pair[0], pair[1]);
+    }
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnHTML = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+
+    fetch(SCRIPT_URL + '?action=saveGoal', {
+        method: 'POST',
+        body: data
+    })
+    .then(res => res.json())
+    .then(resData => {
+        if(resData.result === 'success') {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('setGoalModal'));
+            modal.hide();
+            form.reset();
+            loadGoals(); // Refresh data
+        } else {
+            alert("Error: " + resData.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Terjadi kesalahan saat menyimpan data.");
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+    });
+}
+
+// ================= DARK MODE =================
+function initDarkMode() {
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    if (isDark) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+        updateDarkModeIcons(true);
+    }
+}
+
+function toggleDarkMode() {
+    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+    const isDark = currentTheme === 'dark';
+    
+    if (isDark) {
+        document.documentElement.removeAttribute('data-bs-theme');
+        localStorage.setItem('darkMode', 'false');
+        updateDarkModeIcons(false);
+    } else {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+        localStorage.setItem('darkMode', 'true');
+        updateDarkModeIcons(true);
+    }
+    
+    // Update chart colors if exists
+    if(trendChartInstance) trendChartInstance.update();
+    if(categoryChartInstance) categoryChartInstance.update();
+}
+
+function updateDarkModeIcons(isDark) {
+    const mobIcon = document.getElementById('mobile-dark-icon');
+    const deskIcon = document.getElementById('desktop-dark-icon');
+    const deskText = document.getElementById('desktop-dark-text');
+    
+    if(mobIcon) {
+        mobIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    if(deskIcon) {
+        deskIcon.className = isDark ? 'fas fa-sun me-2' : 'fas fa-moon me-2';
+        if(deskText) deskText.innerText = isDark ? 'Mode Terang' : 'Mode Gelap';
+    }
+}
+
+// ================= EXPORT CSV =================
+function exportToCSV() {
+    const txList = window.currentFilteredTransactions || globalTransactions;
+    if (txList.length === 0) {
+        alert("Tidak ada data untuk diekspor pada bulan ini.");
+        return;
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "ID,Tanggal,Jenis,Kategori,Sumber,Jumlah,Catatan\n";
+
+    txList.forEach(row => {
+        let cleanNotes = (row.notes || "").replace(/,/g, " ");
+        let rowData = [row.id, row.date, row.type, row.category, row.source, row.amount, cleanNotes];
+        csvContent += rowData.join(",") + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    const filter = document.getElementById('month-filter');
+    const monthStr = filter ? filter.value : "all";
+    link.setAttribute("download", `laporan_keuangan_${monthStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// ================= KALKULATOR =================
+let calcExpression = "";
+function calcAction(val) {
+    const display = document.getElementById('calc-display');
+    const history = document.getElementById('calc-history');
+    
+    if (val === 'C') {
+        calcExpression = "";
+        display.innerText = "0";
+        history.innerText = "";
+    } else if (val === 'DEL') {
+        calcExpression = calcExpression.toString().slice(0, -1);
+        display.innerText = calcExpression || "0";
+    } else if (val === '=') {
+        try {
+            // Replace visual operators with math operators
+            let mathExpr = calcExpression.replace(/×/g, '*').replace(/÷/g, '/');
+            // Handle percentages (e.g. 100+10% -> 100+(100*10/100) or just simple eval)
+            // For simple eval:
+            let result = new Function('return ' + mathExpr)();
+            if(!Number.isInteger(result)) result = result.toFixed(2);
+            history.innerText = calcExpression + " =";
+            calcExpression = result.toString();
+            display.innerText = calcExpression;
+        } catch (e) {
+            display.innerText = "Error";
+            calcExpression = "";
+        }
+    } else if (val === '()') {
+        // Simple parenthesis logic (count opens and closes)
+        const openCount = (calcExpression.match(/\(/g) || []).length;
+        const closeCount = (calcExpression.match(/\)/g) || []).length;
+        if (openCount > closeCount) calcExpression += ")";
+        else calcExpression += "(";
+        display.innerText = calcExpression;
+    } else {
+        if (calcExpression === "0" && !isNaN(val)) calcExpression = "";
+        
+        let displayVal = val;
+        if(val === '*') displayVal = '×';
+        if(val === '/') displayVal = '÷';
+        
+        calcExpression += displayVal;
+        display.innerText = calcExpression;
+    }
+}
+
+// ================= DEBTS =================
+function renderDebts() {
+    const debtList = document.getElementById('debt-list');
+    if(!debtList) return;
+    debtList.innerHTML = '';
+    
+    if (globalDebts.length === 0) {
+        debtList.innerHTML = '<div class="col-12 text-center py-4 text-muted">Belum ada catatan hutang/piutang.</div>';
+        return;
+    }
+    
+    globalDebts.forEach(d => {
+        const total = parseFloat(d.total);
+        const paid = parseFloat(d.paid);
+        const remaining = total - paid;
+        const percentage = Math.min((paid / total) * 100, 100).toFixed(1);
+        
+        let typeBadge = d.type === 'Hutang' ? '<span class="badge bg-danger">Hutang</span>' : '<span class="badge bg-success">Piutang</span>';
+        let statusBadge = d.status === 'Lunas' ? '<span class="badge bg-success"><i class="fas fa-check"></i> Lunas</span>' : '<span class="badge bg-warning text-dark">Belum Lunas</span>';
+        
+        const col = document.createElement('div');
+        col.className = 'col-md-6';
+        col.innerHTML = `
+            <div class="border rounded-3 p-3 shadow-sm bg-white" style="cursor: pointer;" onclick="editDebt('${d.id}')">
+                <div class="d-flex justify-content-between mb-2 align-items-center">
+                    <span class="fw-bold text-dark fs-5">${d.name} ${typeBadge}</span>
+                    ${statusBadge}
+                </div>
+                <div class="progress mb-2" style="height: 10px; border-radius: 10px;">
+                    <div class="progress-bar ${d.type === 'Hutang' ? 'bg-danger' : 'bg-success'}" role="progressbar" style="width: ${percentage}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted">
+                    <span>Dibayar: <strong class="text-dark">${formatRupiah(paid)}</strong></span>
+                    <span>Sisa: <strong class="text-dark">${formatRupiah(remaining)}</strong></span>
+                </div>
+                <div class="d-flex justify-content-between small text-muted mt-1">
+                    <span>Total: ${formatRupiah(total)}</span>
+                    <span class="text-primary"><i class="fas fa-edit me-1"></i>Edit</span>
+                </div>
+            </div>
+        `;
+        debtList.appendChild(col);
+    });
+}
+
+function openDebtModal() {
+    document.getElementById('debt-form').reset();
+    document.getElementById('debt-id').value = '';
+    document.getElementById('debtModalTitle').innerText = 'Catat Hutang / Piutang Baru';
+    new bootstrap.Modal(document.getElementById('setDebtModal')).show();
+}
+
+function editDebt(id) {
+    const debt = globalDebts.find(d => d.id.toString() === id.toString());
+    if (debt) {
+        document.getElementById('debt-id').value = debt.id;
+        document.getElementById('debt-type').value = debt.type;
+        document.getElementById('debt-name').value = debt.name;
+        document.getElementById('debt-total').value = debt.total;
+        document.getElementById('debt-paid').value = debt.paid;
+        document.getElementById('debt-status').value = debt.status;
+        document.getElementById('debtModalTitle').innerText = 'Edit Hutang / Piutang';
+        new bootstrap.Modal(document.getElementById('setDebtModal')).show();
+    }
+}
+
+function handleSaveDebt(e) {
+    e.preventDefault();
+
+    if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+        alert("Ganti SCRIPT_URL dengan URL Web App Anda untuk menyimpan data.");
+        return;
+    }
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = new URLSearchParams();
+    
+    for (const pair of formData) {
+        data.append(pair[0], pair[1]);
+    }
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnHTML = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+
+    fetch(SCRIPT_URL + '?action=saveDebt', {
+        method: 'POST',
+        body: data
+    })
+    .then(res => res.json())
+    .then(resData => {
+        if(resData.result === 'success') {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('setDebtModal'));
+            modal.hide();
+            form.reset();
+            loadDebts();
         } else {
             alert("Error: " + resData.message);
         }

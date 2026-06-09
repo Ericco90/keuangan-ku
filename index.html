@@ -21,9 +21,11 @@
 </head>
 <body class="bg-light pb-5 pb-md-0">
 
-    <!-- Top App Bar (Mobile) -->
     <nav class="navbar navbar-dark bg-primary-custom d-md-none px-3 sticky-top shadow-sm" style="z-index: 1030;">
-        <span class="navbar-brand fw-bold mb-0 mx-auto"><i class="fas fa-wallet text-warning me-2"></i>Januar Managemen</span>
+        <span class="navbar-brand fw-bold mb-0"><i class="fas fa-wallet text-warning me-2"></i>Januar Managemen</span>
+        <button class="btn btn-link text-white text-decoration-none shadow-none" onclick="toggleDarkMode()">
+            <i class="fas fa-moon" id="mobile-dark-icon"></i>
+        </button>
     </nav>
 
     <div class="d-flex">
@@ -35,10 +37,14 @@
                 <li class="nav-item"><a class="nav-link" href="#" onclick="switchView('analytics')"><i class="fas fa-chart-line me-2"></i>Analitik</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" onclick="switchView('budgets')"><i class="fas fa-bullseye me-2"></i>Anggaran</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" id="nav-goals" onclick="switchView('goals')"><i class="fas fa-piggy-bank me-2"></i>Tujuan</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-debts" onclick="switchView('debts')"><i class="fas fa-hand-holding-usd me-2"></i>Hutang & Piutang</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#addTransactionModal"><i class="fas fa-plus-circle me-2"></i>Tambah Transaksi</a></li>
             </ul>
             
             <div class="mt-auto">
+                <button class="btn btn-outline-light w-100 mb-3" onclick="toggleDarkMode()">
+                    <i class="fas fa-moon me-2" id="desktop-dark-icon"></i><span id="desktop-dark-text">Mode Gelap</span>
+                </button>
                 <hr class="border-secondary">
                 <small class="text-white-50">&copy; 2026 Januar Managemen</small>
             </div>
@@ -56,6 +62,12 @@
                     <select id="month-filter" class="form-select border-0 shadow-sm rounded-3 fw-semibold text-muted bg-white" onchange="applyMonthFilter()">
                         <option value="all">Semua Waktu</option>
                     </select>
+                    <button class="btn btn-light shadow-sm text-primary" data-bs-toggle="modal" data-bs-target="#calculatorModal" title="Kalkulator">
+                        <i class="fas fa-calculator"></i>
+                    </button>
+                    <button class="btn btn-success shadow-sm d-none d-md-block" onclick="exportToCSV()" title="Download Excel/CSV">
+                        <i class="fas fa-file-excel"></i>
+                    </button>
                     <button class="btn btn-primary btn-custom d-none d-md-block shadow-sm" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
                         <i class="fas fa-plus me-2"></i>Transaksi Baru
                     </button>
@@ -236,6 +248,32 @@
                     </div>
                 </div>
             </div> <!-- END VIEW GOALS -->
+
+            <!-- VIEW: DEBTS -->
+            <div id="view-debts" class="d-none">
+                <div class="row g-4 mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div>
+                                        <h5 class="fw-bold mb-1">Catatan Hutang & Piutang</h5>
+                                        <p class="text-muted small mb-0">Lacak uang yang dipinjam atau meminjam.</p>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="openDebtModal()">
+                                        <i class="fas fa-plus me-2"></i>Catat Hutang/Piutang
+                                    </button>
+                                </div>
+                                <div id="debt-list" class="row g-4">
+                                    <div class="col-12 text-center py-4 text-muted">
+                                        <i class="fas fa-spinner fa-spin me-2"></i> Memuat data...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- END VIEW DEBTS -->
 
         </div>
     </div>
@@ -420,6 +458,99 @@
                         </div>
 
                         <button type="submit" class="btn btn-success btn-custom w-100 py-2 rounded-3 fw-semibold">Simpan Tujuan</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Kalkulator -->
+    <div class="modal fade" id="calculatorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 text-muted"><i class="fas fa-calculator me-2"></i>Kalkulator</h6>
+                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="bg-light rounded-3 p-3 mb-3 text-end">
+                        <div id="calc-history" class="small text-muted" style="min-height: 20px;"></div>
+                        <div id="calc-display" class="fs-2 fw-bold text-dark text-truncate">0</div>
+                    </div>
+                    <div class="calc-grid">
+                        <button class="calc-btn text-danger" onclick="calcAction('C')">C</button>
+                        <button class="calc-btn op" onclick="calcAction('()')">( )</button>
+                        <button class="calc-btn op" onclick="calcAction('%')">%</button>
+                        <button class="calc-btn op" onclick="calcAction('/')">÷</button>
+                        
+                        <button class="calc-btn" onclick="calcAction('7')">7</button>
+                        <button class="calc-btn" onclick="calcAction('8')">8</button>
+                        <button class="calc-btn" onclick="calcAction('9')">9</button>
+                        <button class="calc-btn op" onclick="calcAction('*')">×</button>
+                        
+                        <button class="calc-btn" onclick="calcAction('4')">4</button>
+                        <button class="calc-btn" onclick="calcAction('5')">5</button>
+                        <button class="calc-btn" onclick="calcAction('6')">6</button>
+                        <button class="calc-btn op" onclick="calcAction('-')">-</button>
+                        
+                        <button class="calc-btn" onclick="calcAction('1')">1</button>
+                        <button class="calc-btn" onclick="calcAction('2')">2</button>
+                        <button class="calc-btn" onclick="calcAction('3')">3</button>
+                        <button class="calc-btn op" onclick="calcAction('+')">+</button>
+                        
+                        <button class="calc-btn" onclick="calcAction('0')">0</button>
+                        <button class="calc-btn" onclick="calcAction('.')">.</button>
+                        <button class="calc-btn" onclick="calcAction('DEL')">⌫</button>
+                        <button class="calc-btn eq" onclick="calcAction('=')">=</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Set Debt -->
+    <div class="modal fade" id="setDebtModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="debtModalTitle">Catat Hutang / Piutang</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="debt-form">
+                        <input type="hidden" name="id" id="debt-id">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Jenis Catatan</label>
+                            <select class="form-select" name="type" id="debt-type" required>
+                                <option value="Hutang">Hutang (Saya meminjam)</option>
+                                <option value="Piutang">Piutang (Orang pinjam ke saya)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nama Orang / Pihak</label>
+                            <input type="text" class="form-control" name="name" id="debt-name" required placeholder="Misal: Budi">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Total Pinjaman (Rp)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">Rp</span>
+                                <input type="number" class="form-control border-start-0 ps-0" name="total" id="debt-total" required placeholder="0" min="0">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Sudah Dibayar (Rp)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">Rp</span>
+                                <input type="number" class="form-control border-start-0 ps-0" name="paid" id="debt-paid" required placeholder="0" min="0">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Status</label>
+                            <select class="form-select" name="status" id="debt-status" required>
+                                <option value="Belum Lunas">Belum Lunas</option>
+                                <option value="Lunas">Lunas</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-custom w-100 py-2 rounded-3 fw-semibold">Simpan Catatan</button>
                     </form>
                 </div>
             </div>

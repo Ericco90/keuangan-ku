@@ -9,12 +9,32 @@
     --card-bg: #ffffff;
     --text-main: #0f172a;
     --text-muted: #64748b;
+    --border-color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] {
+    --primary: #0f172a;       
+    --primary-light: #1e293b; 
+    --background: #121212;    
+    --card-bg: #1e1e1e;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #333333;
 }
 
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--background) !important;
     color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Card overrides */
+.card {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
 }
 
 /* Utilities */
@@ -122,13 +142,49 @@ body {
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid #e2e8f0;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--card-bg) !important;
+    color: var(--text-muted) !important;
 }
 
 .table td {
     vertical-align: middle;
     color: var(--text-main);
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--card-bg) !important;
+}
+
+/* Calculator Grid */
+.calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.calc-btn {
+    padding: 15px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    border-radius: 12px;
+    border: none;
+    background-color: rgba(100, 116, 139, 0.1);
+    color: var(--text-main);
+    transition: all 0.1s ease;
+}
+
+.calc-btn:active {
+    transform: scale(0.95);
+}
+
+.calc-btn.op {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--accent);
+}
+
+.calc-btn.eq {
+    background-color: var(--accent);
+    color: white;
 }
 
 /* Responsive */
@@ -153,9 +209,10 @@ body {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--border-color);
     z-index: 1040;
     padding-bottom: env(safe-area-inset-bottom);
+    transition: background-color 0.3s ease;
 }
 
 .mobile-bottom-nav .nav-item {
