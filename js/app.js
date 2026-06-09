@@ -8,8 +8,9 @@ const categories = {
     Expense: ['Makanan & Minuman', 'Transportasi', 'Tagihan & Utilitas', 'Belanja', 'Hiburan', 'Kesehatan', 'Pendidikan', 'Lainnya']
 };
 
-let expenseChartInstance = null;
+let categoryChartInstance = null;
 let trendChartInstance = null;
+let globalTransactions = [];
 
 function switchView(view) {
     const dashboardView = document.getElementById('view-dashboard');
@@ -100,6 +101,7 @@ function loadTransactions() {
         .then(res => res.json())
         .then(data => {
             if (data.result === 'success') {
+                globalTransactions = data.data;
                 renderDashboard(data.data);
             } else {
                 tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${data.message}</td></tr>`;
@@ -146,17 +148,10 @@ function renderDashboard(transactions) {
         const amount = parseFloat(trx.amount);
         const isIncome = trx.type === 'Pemasukan';
 
-        // Hitung total
         if (isIncome) {
             totalIncome += amount;
         } else {
             totalExpense += amount;
-            // Kumpulkan data untuk chart kategori
-            if (expenseByCategory[trx.category]) {
-                expenseByCategory[trx.category] += amount;
-            } else {
-                expenseByCategory[trx.category] = amount;
-            }
         }
 
         // Render tabel
@@ -190,14 +185,32 @@ function renderDashboard(transactions) {
     document.getElementById('total-income').innerText = formatRupiah(totalIncome);
     document.getElementById('total-expense').innerText = formatRupiah(totalExpense);
 
-    renderChart(expenseByCategory);
+    updateCategoryChart();
     renderTrendChart(trendData);
 }
 
+function updateCategoryChart() {
+    const type = document.getElementById('chart-type-select').value;
+    let dataObj = {};
+    
+    globalTransactions.forEach(trx => {
+        if (trx.type === type) {
+            const amount = parseFloat(trx.amount);
+            if (dataObj[trx.category]) {
+                dataObj[trx.category] += amount;
+            } else {
+                dataObj[trx.category] = amount;
+            }
+        }
+    });
+    
+    renderChart(dataObj);
+}
+
 function renderChart(dataObj) {
-    const ctx = document.getElementById('expenseChart').getContext('2d');
+    const ctx = document.getElementById('categoryChart').getContext('2d');
     const noDataEl = document.getElementById('no-chart-data');
-    const chartEl = document.getElementById('expenseChart');
+    const chartEl = document.getElementById('categoryChart');
 
     const labels = Object.keys(dataObj);
     const dataPoints = Object.values(dataObj);
@@ -215,11 +228,11 @@ function renderChart(dataObj) {
         '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#a855f7', '#d946ef', '#f43f5e'
     ];
 
-    if (expenseChartInstance) {
-        expenseChartInstance.destroy();
+    if (categoryChartInstance) {
+        categoryChartInstance.destroy();
     }
 
-    expenseChartInstance = new Chart(ctx, {
+    categoryChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: labels,
@@ -301,6 +314,8 @@ function renderTrendChart(trendData) {
                     tension: 0.4,
                     fill: true,
                     pointBackgroundColor: '#10b981',
+                    pointRadius: 5,
+                    pointHoverRadius: 7
                 },
                 {
                     label: 'Pengeluaran',
@@ -311,6 +326,8 @@ function renderTrendChart(trendData) {
                     tension: 0.4,
                     fill: true,
                     pointBackgroundColor: '#ef4444',
+                    pointRadius: 5,
+                    pointHoverRadius: 7
                 }
             ]
         },

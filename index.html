@@ -157,12 +157,18 @@
                     <div class="col-lg-4">
                         <div class="card border-0 shadow-sm rounded-4 h-100">
                             <div class="card-body p-4">
-                                <h5 class="fw-bold mb-4">Kategori Pengeluaran</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="fw-bold mb-0">Kategori</h5>
+                                    <select id="chart-type-select" class="form-select form-select-sm w-auto shadow-none" onchange="updateCategoryChart()">
+                                        <option value="Pengeluaran">Pengeluaran</option>
+                                        <option value="Pemasukan">Pemasukan</option>
+                                    </select>
+                                </div>
                                 <div class="chart-container" style="position: relative; height:300px;">
-                                    <canvas id="expenseChart"></canvas>
+                                    <canvas id="categoryChart"></canvas>
                                 </div>
                                 <div id="no-chart-data" class="text-center text-muted mt-4 d-none">
-                                    Belum ada data pengeluaran.
+                                    Belum ada data.
                                 </div>
                             </div>
                         </div>
