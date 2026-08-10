@@ -1312,17 +1312,9 @@ let isSettingNewPin = false;
 let globalSavedPin = "";
 
 function initPin() {
-    const pinScreen = document.getElementById('pin-screen');
-    const pinMessage = document.getElementById('pin-message');
-    const pinBtn = document.getElementById('pin-btn');
-
-    if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
-        pinScreen.style.setProperty('display', 'none', 'important');
-        return;
-    }
-
-    pinMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat sistem keamanan...';
-    pinScreen.style.setProperty('display', 'flex', 'important');
+    // SEMENTARA DIMATIKAN AGAR BISA MASUK
+    unlockApp();
+    return;
 
     // Coba ambil dari backend, jika gagal (karena script belum diupdate) gunakan localStorage
     fetch(SCRIPT_URL + '?action=getPin')
