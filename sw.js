@@ -1,4 +1,4 @@
-const CACHE_NAME = 'januar-managemen-v1';
+const CACHE_NAME = 'keuangan-app-v1786366067924';
 const urlsToCache = [
   './',
   './index.html',

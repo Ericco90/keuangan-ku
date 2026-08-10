@@ -1324,30 +1324,34 @@ function initPin() {
     pinMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat sistem keamanan...';
     pinScreen.style.setProperty('display', 'flex', 'important');
 
+    // Coba ambil dari backend, jika gagal (karena script belum diupdate) gunakan localStorage
     fetch(SCRIPT_URL + '?action=getPin')
         .then(res => res.json())
         .then(data => {
             if (data.result === 'success') {
                 globalSavedPin = data.pin;
-                if (!globalSavedPin || globalSavedPin === "") {
-                    // Mode Set PIN Baru
-                    isSettingNewPin = true;
-                    pinMessage.innerText = 'Buat PIN 4-6 digit untuk mengamankan aplikasi';
-                    pinBtn.innerText = 'Simpan PIN';
-                } else {
-                    // Mode Verifikasi PIN
-                    isSettingNewPin = false;
-                    pinMessage.innerText = 'Masukkan PIN Anda';
-                    pinBtn.innerText = 'Masuk';
-                }
             } else {
-                pinMessage.innerText = 'Gagal memuat sistem keamanan.';
+                globalSavedPin = localStorage.getItem('app_pin') || "";
             }
+            setupPinUI();
         })
         .catch(err => {
             console.error(err);
-            pinMessage.innerText = 'Koneksi gagal. Coba muat ulang.';
+            globalSavedPin = localStorage.getItem('app_pin') || "";
+            setupPinUI();
         });
+
+    function setupPinUI() {
+        if (!globalSavedPin || globalSavedPin === "") {
+            isSettingNewPin = true;
+            pinMessage.innerText = 'Buat PIN 4-6 digit untuk mengamankan aplikasi';
+            pinBtn.innerText = 'Simpan PIN';
+        } else {
+            isSettingNewPin = false;
+            pinMessage.innerText = 'Masukkan PIN Anda';
+            pinBtn.innerText = 'Masuk';
+        }
+    }
 }
 
 function verifyPin() {
@@ -1356,6 +1360,20 @@ function verifyPin() {
     const pinMessage = document.getElementById('pin-message');
     const pinBtn = document.getElementById('pin-btn');
     
+    // Bypass Reset Master PIN
+    if (pinValue === '000000') {
+        localStorage.removeItem('app_pin');
+        fetch(SCRIPT_URL + '?action=setPin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'pin='
+        }).finally(() => {
+            alert("PIN telah di-reset! Halaman akan dimuat ulang.");
+            window.location.reload();
+        });
+        return;
+    }
+
     if (pinValue.length < 4) {
         pinMessage.innerText = 'PIN minimal 4 digit!';
         pinMessage.classList.add('text-danger');
@@ -1377,10 +1395,18 @@ function verifyPin() {
         .then(data => {
             if (data.result === 'success') {
                 globalSavedPin = pinValue;
-                unlockApp();
             } else {
-                alert("Gagal menyimpan PIN: " + data.message);
+                // Fallback local storage
+                localStorage.setItem('app_pin', pinValue);
+                globalSavedPin = pinValue;
             }
+            unlockApp();
+        })
+        .catch(err => {
+            // Fallback local storage
+            localStorage.setItem('app_pin', pinValue);
+            globalSavedPin = pinValue;
+            unlockApp();
         })
         .finally(() => {
             pinBtn.disabled = false;
@@ -1392,7 +1418,7 @@ function verifyPin() {
             unlockApp();
         } else {
             pinInput.value = '';
-            pinMessage.innerText = 'PIN Salah! Coba lagi.';
+            pinMessage.innerText = 'PIN Salah! Coba lagi. (Atau ketik 000000 untuk reset)';
             pinMessage.classList.add('text-danger');
             pinInput.classList.add('is-invalid');
             
@@ -1400,7 +1426,7 @@ function verifyPin() {
                 pinMessage.innerText = 'Masukkan PIN Anda';
                 pinMessage.classList.remove('text-danger');
                 pinInput.classList.remove('is-invalid');
-            }, 2000);
+            }, 3000);
         }
     }
 }
