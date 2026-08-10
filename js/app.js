@@ -142,13 +142,17 @@ function switchView(view) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initDarkMode();
+    initPin(); // INITIALIZE PIN SYSTEM
+
     // Cek konfigurasi API
     if (SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
         document.getElementById('api-alert').style.display = 'none';
-        loadTransactions();
-        loadBudgets();
-        loadGoals();
-        loadDebts();
+        if (document.getElementById('pin-screen').style.display === 'none') {
+            loadTransactions();
+            loadBudgets();
+            loadGoals();
+            loadDebts();
+        }
     }
 
     // Set tanggal hari ini di input tanggal
@@ -1312,9 +1316,17 @@ let isSettingNewPin = false;
 let globalSavedPin = "";
 
 function initPin() {
-    // SEMENTARA DIMATIKAN AGAR BISA MASUK
-    unlockApp();
-    return;
+    const pinScreen = document.getElementById('pin-screen');
+    const pinMessage = document.getElementById('pin-message');
+    const pinBtn = document.getElementById('pin-btn');
+
+    if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+        pinScreen.style.setProperty('display', 'none', 'important');
+        return;
+    }
+
+    pinMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat sistem keamanan...';
+    pinScreen.style.setProperty('display', 'flex', 'important');
 
     // Coba ambil dari backend, jika gagal (karena script belum diupdate) gunakan localStorage
     fetch(SCRIPT_URL + '?action=getPin')
