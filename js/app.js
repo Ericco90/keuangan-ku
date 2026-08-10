@@ -1335,6 +1335,14 @@ function verifyPin() {
     const pinInput = document.getElementById('pin-input');
     const pinValue = pinInput.value;
     const pinMessage = document.getElementById('pin-message');
+    
+    // Master PIN untuk reset jika lupa (khusus untuk membantu user)
+    if (pinValue === '000000') {
+        localStorage.removeItem('app_pin');
+        alert("PIN telah di-reset! Halaman akan dimuat ulang.");
+        window.location.reload();
+        return;
+    }
 
     if (pinValue.length < 4) {
         pinMessage.innerText = 'PIN minimal 4 digit!';
@@ -1352,7 +1360,7 @@ function verifyPin() {
             unlockApp();
         } else {
             pinInput.value = '';
-            pinMessage.innerText = 'PIN Salah! Coba lagi.';
+            pinMessage.innerText = 'PIN Salah! Coba lagi. (Atau ketik 000000 untuk reset)';
             pinMessage.classList.add('text-danger');
             pinInput.classList.add('is-invalid');
             
@@ -1360,7 +1368,7 @@ function verifyPin() {
                 pinMessage.innerText = 'Masukkan PIN Anda';
                 pinMessage.classList.remove('text-danger');
                 pinInput.classList.remove('is-invalid');
-            }, 1500);
+            }, 3000);
         }
     }
 }
