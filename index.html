@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Januar Managemen</title>
+    <title>Keuanganku</title>
     <!-- PWA & Mobile App Tags -->
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -23,7 +23,8 @@
     <!-- PIN Lock Screen -->
     <div id="pin-screen" class="d-flex flex-column justify-content-center align-items-center vh-100 vw-100 bg-primary-custom text-white position-fixed top-0 start-0 z-3" style="display: flex !important; z-index: 1060 !important;">
         <div class="text-center p-4">
-            <h2 class="fw-bold mb-3"><i class="fas fa-lock me-2 text-warning"></i>Januar Keuangan</h2>
+            <img src="img/logo.jpg" alt="Logo Keuanganku" width="80" height="80" class="rounded-circle shadow mb-3">
+            <h2 class="fw-bold mb-3">Keuanganku</h2>
             <p id="pin-message" class="mb-4">Masukkan PIN Anda</p>
             
             <div class="d-flex justify-content-center mb-4">
@@ -40,16 +41,21 @@
     </div>
 
     <nav class="navbar navbar-dark bg-primary-custom d-md-none px-3 sticky-top shadow-sm" style="z-index: 1030;">
-        <span class="navbar-brand fw-bold mb-0"><i class="fas fa-wallet text-warning me-2"></i>Januar Managemen</span>
-        <button class="btn btn-link text-white text-decoration-none shadow-none" onclick="toggleDarkMode()">
-            <i class="fas fa-moon" id="mobile-dark-icon"></i>
-        </button>
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand text-white d-flex align-items-center" href="#" onclick="switchView('dashboard')">
+                <img src="img/logo.jpg" alt="Keuanganku" height="30" class="me-2 rounded-circle shadow-sm">
+                <span class="fw-bold fs-5">Keuanganku</span>
+            </a>
+            <button class="btn btn-link text-white text-decoration-none shadow-none" onclick="toggleDarkMode()">
+                <i class="fas fa-moon" id="mobile-dark-icon"></i>
+            </button>
+        </div>
     </nav>
 
     <div class="d-flex" style="overflow-x: hidden; width: 100vw;">
         <!-- Sidebar (Desktop) -->
         <div class="sidebar bg-primary-custom text-white p-4 d-none d-md-flex flex-column vh-100 position-fixed">
-            <h3 class="fw-bold mb-5"><i class="fas fa-wallet me-2 text-warning"></i>Januar Managemen</h3>
+            <h3 class="fw-bold mb-5"><img src="img/logo.jpg" alt="Logo" width="30" height="30" class="rounded-circle me-2">Keuanganku</h3>
             <ul class="nav flex-column">
                 <li class="nav-item"><a class="nav-link active" href="#" onclick="switchView('dashboard')"><i class="fas fa-chart-pie me-2"></i>Dashboard</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" onclick="switchView('analytics')"><i class="fas fa-chart-line me-2"></i>Analitik</a></li>
@@ -64,7 +70,7 @@
                     <i class="fas fa-moon me-2" id="desktop-dark-icon"></i><span id="desktop-dark-text">Mode Gelap</span>
                 </button>
                 <hr class="border-secondary">
-                <small class="text-white-50">&copy; 2026 Januar Managemen</small>
+                <small class="text-white-50">&copy; 2026 Keuanganku</small>
             </div>
         </div>
 

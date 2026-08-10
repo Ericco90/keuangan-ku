@@ -1309,41 +1309,53 @@ function deleteDebt(id) {
 
 // ================= PIN SYSTEM =================
 let isSettingNewPin = false;
+let globalSavedPin = "";
 
 function initPin() {
-    const savedPin = localStorage.getItem('app_pin');
     const pinScreen = document.getElementById('pin-screen');
     const pinMessage = document.getElementById('pin-message');
     const pinBtn = document.getElementById('pin-btn');
 
-    if (!savedPin) {
-        // Mode Set PIN Baru
-        isSettingNewPin = true;
-        pinMessage.innerText = 'Buat PIN 4-6 digit untuk mengamankan aplikasi';
-        pinBtn.innerText = 'Simpan PIN';
-        pinScreen.style.setProperty('display', 'flex', 'important');
-    } else {
-        // Mode Verifikasi PIN
-        isSettingNewPin = false;
-        pinMessage.innerText = 'Masukkan PIN Anda';
-        pinBtn.innerText = 'Masuk';
-        pinScreen.style.setProperty('display', 'flex', 'important');
+    if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+        pinScreen.style.setProperty('display', 'none', 'important');
+        return;
     }
+
+    pinMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat sistem keamanan...';
+    pinScreen.style.setProperty('display', 'flex', 'important');
+
+    fetch(SCRIPT_URL + '?action=getPin')
+        .then(res => res.json())
+        .then(data => {
+            if (data.result === 'success') {
+                globalSavedPin = data.pin;
+                if (!globalSavedPin || globalSavedPin === "") {
+                    // Mode Set PIN Baru
+                    isSettingNewPin = true;
+                    pinMessage.innerText = 'Buat PIN 4-6 digit untuk mengamankan aplikasi';
+                    pinBtn.innerText = 'Simpan PIN';
+                } else {
+                    // Mode Verifikasi PIN
+                    isSettingNewPin = false;
+                    pinMessage.innerText = 'Masukkan PIN Anda';
+                    pinBtn.innerText = 'Masuk';
+                }
+            } else {
+                pinMessage.innerText = 'Gagal memuat sistem keamanan.';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            pinMessage.innerText = 'Koneksi gagal. Coba muat ulang.';
+        });
 }
 
 function verifyPin() {
     const pinInput = document.getElementById('pin-input');
     const pinValue = pinInput.value;
     const pinMessage = document.getElementById('pin-message');
+    const pinBtn = document.getElementById('pin-btn');
     
-    // Master PIN untuk reset jika lupa (khusus untuk membantu user)
-    if (pinValue === '000000') {
-        localStorage.removeItem('app_pin');
-        alert("PIN telah di-reset! Halaman akan dimuat ulang.");
-        window.location.reload();
-        return;
-    }
-
     if (pinValue.length < 4) {
         pinMessage.innerText = 'PIN minimal 4 digit!';
         pinMessage.classList.add('text-danger');
@@ -1352,15 +1364,35 @@ function verifyPin() {
     }
 
     if (isSettingNewPin) {
-        localStorage.setItem('app_pin', pinValue);
-        unlockApp();
+        const originalBtnText = pinBtn.innerText;
+        pinBtn.disabled = true;
+        pinBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+        
+        fetch(SCRIPT_URL + '?action=setPin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'pin=' + encodeURIComponent(pinValue)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.result === 'success') {
+                globalSavedPin = pinValue;
+                unlockApp();
+            } else {
+                alert("Gagal menyimpan PIN: " + data.message);
+            }
+        })
+        .finally(() => {
+            pinBtn.disabled = false;
+            pinBtn.innerText = originalBtnText;
+        });
+        
     } else {
-        const savedPin = localStorage.getItem('app_pin');
-        if (pinValue === savedPin) {
+        if (pinValue === globalSavedPin) {
             unlockApp();
         } else {
             pinInput.value = '';
-            pinMessage.innerText = 'PIN Salah! Coba lagi. (Atau ketik 000000 untuk reset)';
+            pinMessage.innerText = 'PIN Salah! Coba lagi.';
             pinMessage.classList.add('text-danger');
             pinInput.classList.add('is-invalid');
             
@@ -1368,7 +1400,7 @@ function verifyPin() {
                 pinMessage.innerText = 'Masukkan PIN Anda';
                 pinMessage.classList.remove('text-danger');
                 pinInput.classList.remove('is-invalid');
-            }, 3000);
+            }, 2000);
         }
     }
 }
