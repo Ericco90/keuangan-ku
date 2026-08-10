@@ -1316,6 +1316,10 @@ let isSettingNewPin = false;
 let globalSavedPin = "";
 
 function initPin() {
+    // SEMENTARA DIMATIKAN AGAR BISA MASUK
+    unlockApp();
+    return;
+
     const pinScreen = document.getElementById('pin-screen');
     const pinMessage = document.getElementById('pin-message');
     const pinBtn = document.getElementById('pin-btn');
