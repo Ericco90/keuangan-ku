@@ -267,3 +267,44 @@ body {
     font-size: 1.5rem;
     border: 4px solid var(--background);
 }
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Offline Indicator */
+#offline-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--danger);
+    color: white;
+    text-align: center;
+    padding: 8px;
+    font-weight: 500;
+    z-index: 1050;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+}
+
+#offline-indicator.show {
+    transform: translateY(0);
+}
+
+/* Touch feedback for mobile */
+.btn:active, .nav-item:active, .card:active {
+    opacity: 0.8;
+}

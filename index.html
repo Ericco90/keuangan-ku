@@ -20,6 +20,24 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-light pb-5 pb-md-0">
+    <!-- PIN Lock Screen -->
+    <div id="pin-screen" class="d-flex flex-column justify-content-center align-items-center vh-100 vw-100 bg-primary-custom text-white position-fixed top-0 start-0 z-3" style="display: flex !important; z-index: 1060 !important;">
+        <div class="text-center p-4">
+            <h2 class="fw-bold mb-3"><i class="fas fa-lock me-2 text-warning"></i>Januar Keuangan</h2>
+            <p id="pin-message" class="mb-4">Masukkan PIN Anda</p>
+            
+            <div class="d-flex justify-content-center mb-4">
+                <input type="password" id="pin-input" class="form-control form-control-lg text-center fw-bold text-primary shadow-none" style="width: 200px; font-size: 2rem; letter-spacing: 0.5rem; border-radius: 12px;" inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="••••••">
+            </div>
+            
+            <button id="pin-btn" class="btn btn-warning btn-lg fw-bold rounded-pill px-5 shadow" onclick="verifyPin()">Masuk</button>
+        </div>
+    </div>
+
+    <!-- Offline Indicator -->
+    <div id="offline-indicator">
+        <i class="fas fa-wifi-slash me-2"></i> Anda sedang offline. Fitur tertentu mungkin tidak tersedia.
+    </div>
 
     <nav class="navbar navbar-dark bg-primary-custom d-md-none px-3 sticky-top shadow-sm" style="z-index: 1030;">
         <span class="navbar-brand fw-bold mb-0"><i class="fas fa-wallet text-warning me-2"></i>Januar Managemen</span>

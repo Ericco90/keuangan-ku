@@ -1262,3 +1262,118 @@ function handleSaveDebt(e) {
         submitBtn.innerHTML = originalBtnHTML;
     });
 }
+
+
+// ================= DELETE FUNCTIONS =================
+function deleteBudget(category) {
+    if(!confirm("Apakah Anda yakin ingin menghapus anggaran ini?")) return;
+    fetch(SCRIPT_URL + '?action=deleteBudget', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'category=' + encodeURIComponent(category)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.result === 'success') loadBudgets();
+        else alert("Error: " + data.message);
+    }).catch(err => console.error(err));
+}
+
+function deleteGoal(id) {
+    if(!confirm("Apakah Anda yakin ingin menghapus tujuan/tabungan ini?")) return;
+    fetch(SCRIPT_URL + '?action=deleteGoal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'id=' + encodeURIComponent(id)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.result === 'success') loadGoals();
+        else alert("Error: " + data.message);
+    }).catch(err => console.error(err));
+}
+
+function deleteDebt(id) {
+    if(!confirm("Apakah Anda yakin ingin menghapus catatan ini?")) return;
+    fetch(SCRIPT_URL + '?action=deleteDebt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'id=' + encodeURIComponent(id)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.result === 'success') loadDebts();
+        else alert("Error: " + data.message);
+    }).catch(err => console.error(err));
+}
+
+// ================= PIN SYSTEM =================
+let isSettingNewPin = false;
+
+function initPin() {
+    const savedPin = localStorage.getItem('app_pin');
+    const pinScreen = document.getElementById('pin-screen');
+    const pinMessage = document.getElementById('pin-message');
+    const pinBtn = document.getElementById('pin-btn');
+
+    if (!savedPin) {
+        // Mode Set PIN Baru
+        isSettingNewPin = true;
+        pinMessage.innerText = 'Buat PIN 4-6 digit untuk mengamankan aplikasi';
+        pinBtn.innerText = 'Simpan PIN';
+        pinScreen.style.setProperty('display', 'flex', 'important');
+    } else {
+        // Mode Verifikasi PIN
+        isSettingNewPin = false;
+        pinMessage.innerText = 'Masukkan PIN Anda';
+        pinBtn.innerText = 'Masuk';
+        pinScreen.style.setProperty('display', 'flex', 'important');
+    }
+}
+
+function verifyPin() {
+    const pinInput = document.getElementById('pin-input');
+    const pinValue = pinInput.value;
+    const pinMessage = document.getElementById('pin-message');
+
+    if (pinValue.length < 4) {
+        pinMessage.innerText = 'PIN minimal 4 digit!';
+        pinMessage.classList.add('text-danger');
+        setTimeout(() => pinMessage.classList.remove('text-danger'), 1500);
+        return;
+    }
+
+    if (isSettingNewPin) {
+        localStorage.setItem('app_pin', pinValue);
+        unlockApp();
+    } else {
+        const savedPin = localStorage.getItem('app_pin');
+        if (pinValue === savedPin) {
+            unlockApp();
+        } else {
+            pinInput.value = '';
+            pinMessage.innerText = 'PIN Salah! Coba lagi.';
+            pinMessage.classList.add('text-danger');
+            pinInput.classList.add('is-invalid');
+            
+            setTimeout(() => {
+                pinMessage.innerText = 'Masukkan PIN Anda';
+                pinMessage.classList.remove('text-danger');
+                pinInput.classList.remove('is-invalid');
+            }, 1500);
+        }
+    }
+}
+
+function unlockApp() {
+    const pinScreen = document.getElementById('pin-screen');
+    pinScreen.style.setProperty('display', 'none', 'important');
+    
+    // Load data if haven't loaded yet
+    if (globalTransactions.length === 0 && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+        loadTransactions();
+        loadBudgets();
+        loadGoals();
+        loadDebts();
+    }
+}
